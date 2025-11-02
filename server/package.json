@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "module": "index.ts",
+
+    "scripts": {
+    "dev": "bun run --hot index.ts"
+  },
+
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/bun": "latest",
+    "eslint": "^9.39.0",
+    "typescript-eslint": "^8.46.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "private": true,
+
+  "type": "module",
+  "dependencies": {
+    "@types/ws": "^8.18.1",
+    "ws": "^8.18.3"
+  }
+}
