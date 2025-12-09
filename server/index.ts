@@ -65,41 +65,40 @@ function createRoom() {
       // return
     }
   }
+  roomList.push(roomId);
   return roomId;
+}
+
+function checkRoom(roomId: string) {
+  const res = roomList.includes(roomId);
+  return res;
 }
 
 ws.on("connection", (socket: CustomeSocket) => {
   socketsList.push(socket);
   socket.on("message", (data) => {
     let parsed = JSON.parse(data.toString());
-
     if (parsed.type === "create") {
       console.log(parsed);
       if (parsed.roomId === null && parsed.type === "create") {
         const roomId = createRoom();
-        console.log(roomId);
         socket.roomId = roomId;
-        console.log(socket);
         socket.send(
           JSON.stringify({ message: "Room Created", roomId: roomId })
         );
       }
     } else if (parsed.type === "join") {
-      socket.roomId = parsed.roomId;
-      console.log(parsed);
-      console.log(socket);
-      socket.send("join");
-    
+      if (checkRoom(parsed.roomId)) {
+        socket.roomId = parsed.roomId;
+      } else {
+        socket.send("Room does not exits");
+      }
     } else if (parsed.type === "chat") {
-
       socketsList.map((s) => {
-        if(s.roomId === socket.roomId){
+        if (s.roomId === socket.roomId) {
           s.send(parsed.message);
         }
-      })
-      console.log(parsed);
-      // socket.send("chat");
-      
+      });
     } else {
       socket.send("error");
     }
