@@ -3,7 +3,7 @@
   "module": "index.ts",
 
     "scripts": {
-    "dev": "bun run --hot index.ts"
+    "dev": "bun --watch index.ts"
   },
 
   "devDependencies": {
