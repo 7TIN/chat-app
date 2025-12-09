@@ -1,26 +1,36 @@
+import type { Socket } from "bun";
 import { WebSocketServer, WebSocket } from "ws";
 
 const ws = new WebSocketServer({ port: 8080 });
 
-let socketsList = [];
+// let socketsList: socket[] = [];
+const roomList: string[] = [];
 
-//boardcasting 
-ws.on("connection", (socket) => {
-  socketsList.push(socket);
-  const length = socketsList.length;
-  // socket.send(socketsList.length);
-  socketsList.map((s, index) => {
-    s.send(length);
-  });
+// interface socket extends WebSocket {
+//   type: string;
+//   payload?: {
+//     message?: string | null;
+//     roomId?: string | null;
+//   };
+// }
 
-  socket.on("message", (e) => {
-    socketsList.map((s) => {
-      s.send(e.toString());
-    });
-  });
-});
+//boardcasting
+// ws.on("connection", (socket) => {
+//   socketsList.push(socket);
+//   const length = socketsList.length;
+//   // socket.send(socketsList.length);
+//   socketsList.map((s, index) => {
+//     s.send(length);
+//   });
 
-// normal Ping Pong 
+//   socket.on("message", (e) => {
+//     socketsList.map((s) => {
+//       s.send(e.toString());
+//     });
+//   });
+// });
+
+// normal Ping Pong
 
 // ws.on("connection", function connection(socket) {
 //   socket.on("ping", () => {
@@ -37,21 +47,64 @@ ws.on("connection", (socket) => {
 //   });
 // });
 
-interface socket extends WebSocket {
-  type : string,
-  payload? : {
-    message? : string,
-    roomId? : string
-  }
+interface CustomeSocket extends WebSocket {
+  // type?: string | null;
+  // message?: string | null;
+  roomId?: string | null;
 }
 
+let socketsList: CustomeSocket[] = [];
 
-ws.on('connection', (socket: socket) => {
-  
-})
+function createRoom() {
+  let roomId = Math.floor(10000 + Math.random() * 90000).toString();
+  let isRoomExists = roomList.includes(roomId);
+  while (isRoomExists) {
+    roomId = Math.floor(10000 + Math.random() * 90000).toString();
+    if (roomList.includes(roomId) === false) {
+      isRoomExists = false;
+      // return
+    }
+  }
+  return roomId;
+}
 
+ws.on("connection", (socket: CustomeSocket) => {
+  socketsList.push(socket);
+  socket.on("message", (data) => {
+    let parsed = JSON.parse(data.toString());
 
+    if (parsed.type === "create") {
+      console.log(parsed);
+      if (parsed.roomId === null && parsed.type === "create") {
+        const roomId = createRoom();
+        console.log(roomId);
+        socket.roomId = roomId;
+        console.log(socket);
+        socket.send(
+          JSON.stringify({ message: "Room Created", roomId: roomId })
+        );
+      }
+    } else if (parsed.type === "join") {
+      socket.roomId = parsed.roomId;
+      console.log(parsed);
+      console.log(socket);
+      socket.send("join");
+    
+    } else if (parsed.type === "chat") {
 
+      socketsList.map((s) => {
+        if(s.roomId === socket.roomId){
+          s.send(parsed.message);
+        }
+      })
+      console.log(parsed);
+      // socket.send("chat");
+      
+    } else {
+      socket.send("error");
+    }
+  });
+});
 
 // let userCount = 0;
 // let socketsList: socket[] = [];
