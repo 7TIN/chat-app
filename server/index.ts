@@ -48,8 +48,6 @@ const roomList: string[] = [];
 // });
 
 interface CustomeSocket extends WebSocket {
-  // type?: string | null;
-  // message?: string | null;
   roomId?: string | null;
 }
 
@@ -90,6 +88,7 @@ ws.on("connection", (socket: CustomeSocket) => {
     } else if (parsed.type === "join") {
       if (checkRoom(parsed.roomId)) {
         socket.roomId = parsed.roomId;
+        socket.send("Room joined Successfully")
       } else {
         socket.send("Room does not exits");
       }
