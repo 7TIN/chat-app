@@ -49,6 +49,7 @@ const roomList: string[] = [];
 
 interface CustomeSocket extends WebSocket {
   roomId?: string | null;
+  userId?: string | null;
 }
 
 let socketsList: CustomeSocket[] = [];
@@ -67,13 +68,35 @@ function createRoom() {
   return roomId;
 }
 
+const checkUser = () => {
+  let userId = Math.random()
+    .toString(36)
+    .substring(2, 2 + 8);
+  let isUserExists = socketsList.some((s) => s.userId == userId);
+  while (isUserExists) {
+    userId = Math.random()
+      .toString(36)
+      .substring(2, 2 + 8);
+    if (socketsList.some((s) => (s.userId == userId) === false)) {
+      isUserExists = false;
+    }
+  }
+  return userId;
+};
+
 function checkRoom(roomId: string) {
   const res = roomList.includes(roomId);
   return res;
 }
 
 ws.on("connection", (socket: CustomeSocket) => {
+
+  const userId = checkUser();
+  socket.userId = userId;
+  socket.send(JSON.stringify({message : "Connected to server", type : "welcome", userId : socket.userId}))
+
   socketsList.push(socket);
+  
   socket.on("message", (data) => {
     let parsed = JSON.parse(data.toString());
     if (parsed.type === "create") {
@@ -88,19 +111,34 @@ ws.on("connection", (socket: CustomeSocket) => {
     } else if (parsed.type === "join") {
       if (checkRoom(parsed.roomId)) {
         socket.roomId = parsed.roomId;
-        socket.send("Room joined Successfully")
+        socket.send(
+          JSON.stringify({
+            type: "join room",
+            message: "Room joined Successfully",
+            success: true,
+          })
+        );
       } else {
-        socket.send("Room does not exits");
+        socket.send(
+          JSON.stringify({
+            type: "join room",
+            message: "Room does not exits",
+            success: false,
+          })
+        );
       }
     } else if (parsed.type === "chat") {
       socketsList.map((s) => {
         if (s.roomId === socket.roomId) {
-          s.send(parsed.message);
+          s.send(JSON.stringify({ message: parsed.message, type: "chat", userId : socket.userId }));
         }
       });
     } else {
       socket.send("error");
     }
+  });
+  socket.on("close", () => {
+    socketsList = socketsList.filter((x) => x !== socket);
   });
 });
 

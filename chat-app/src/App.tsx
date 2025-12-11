@@ -1,10 +1,13 @@
-import { ChatRoom } from "./components/chatRoom"
+import { Toaster } from "sonner";
+import { ChatRoom } from "./components/chatRoom";
 
 function App() {
-
   return (
-      <ChatRoom/>
-  )
+    <>
+      <Toaster position="bottom-right" richColors={true} />
+      <ChatRoom />
+    </>
+  );
 }
 
-export default App
+export default App;
